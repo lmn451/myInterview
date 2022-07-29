@@ -1,24 +1,52 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import logo from "./logo.svg";
+import "./App.css";
+import { debounce } from "lodash";
+import { useGiphyFetch } from "./hooks/useFetch";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 function App() {
+  const [waiting, setWaiting] = useState(false);
+
+  const [query, setQuery] = useState("");
+
+  const { error, loading, data } = useGiphyFetch(query);
+  const debounced = debounce((e: any) => {
+    setQuery(e.target.value);
+    setWaiting(false);
+  }, 3000);
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <input
+        type="text"
+        placeholder="Search for gif"
+        onChange={(e) => {
+          setWaiting(true);
+          debounced(e);
+        }}
+      />
+      {waiting || loading ? (
+        <Skeleton />
+      ) : (
+        (error && "OOps") ||
+        (data && (
+          <ol>
+            {data.map((gifInfo) => (
+              <li key={gifInfo.id}>
+                <a href={gifInfo.url} target="_blank" rel="noreferrer">
+                  <img
+                    src={gifInfo.images.downsized.url}
+                    width={100}
+                    height={100}
+                    alt="gif"
+                  />
+                </a>
+              </li>
+            ))}
+          </ol>
+        ))
+      )}
     </div>
   );
 }
