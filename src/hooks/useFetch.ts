@@ -1,22 +1,25 @@
 import { useEffect, useState } from "react";
-import { generateSearchQuery } from "../api";
-import { Datum, RootObject } from "../types";
 
-export const useGiphyFetch = (query: string) => {
-  const [data, setData] = useState<Datum[]>([]);
+function useFetch<T = unknown>(queryUrl: string | undefined) {
+  const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   useEffect(() => {
+    if (!queryUrl) return;
     setLoading(true);
-    fetch(generateSearchQuery(query))
+    fetch(queryUrl)
       .then((res) => res.json())
-      .then((res: RootObject) => setData(res.data))
+      .then((res) => {
+        setData(res.data);
+      })
       .catch((err) => {
         setError(err);
         console.error(err);
       })
       .finally(() => setLoading(false));
-  }, [query]);
+  }, [queryUrl]);
 
   return { error, loading, data };
-};
+}
+
+export { useFetch };
